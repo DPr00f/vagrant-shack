@@ -1,6 +1,13 @@
 # packer-vagrant-shack-box
 An automated creation of a vagrantbox with virtualbox
 
+# How to use Shack
+make sure `shack` is executable
+
+Type `chmod +x shack`
+
+Install by typing `./shack install` and follow instructions
+
 # Contents
 The installation creates a configured box for Phalcon PHP with:
 
