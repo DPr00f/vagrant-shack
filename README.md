@@ -1,4 +1,4 @@
-# packer-vagrant-ubuntu-box
+# packer-vagrant-shack-box
 An automated creation of a vagrantbox with virtualbox
 
 # Contents
@@ -43,23 +43,23 @@ There are currently 4 possible boxes to install:
 
 To run the commands you need to be in the **templates** folder.
 
-`cd packer-vagrant-ubuntu-box/templates`
+`cd packer-vagrant-shack-box/templates`
 
 To install **Ubuntu Server 14.10 64bit (512MB)** type
 
-`packer build -only=ubuntu ubuntu.json`
+`packer build -only=shack ubuntu.json`
 
 To install **Ubuntu Server 14.10 32bit (512MB)** type
 
-`packer build -only=ubuntu32 ubuntu.json`
+`packer build -only=shack32 ubuntu.json`
 
 To install **Ubuntu Server 14.10 64bit (2048MB)** type
 
-`packer build -only=ubuntu-2048 ubuntu.json`
+`packer build -only=shack-2048 ubuntu.json`
 
 To install **Ubuntu Server 14.10 32bit (2048MB)** type
 
-`packer build -only=ubuntu32-2048 ubuntu.json`
+`packer build -only=shack32-2048 ubuntu.json`
 
 To install **all boxes** type
 `packer build ubuntu.json`

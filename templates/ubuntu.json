@@ -1,7 +1,7 @@
 {
 	"builders": [
 		{
-			"name": "ubuntu",
+			"name": "shack",
 			"type": "virtualbox-iso",
 			"guest_os_type": "Ubuntu_64",
 			"iso_urls": [
@@ -29,7 +29,7 @@
 			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
 			"hard_drive_interface": "sata"
 		},{
-			"name": "ubuntu-2048",
+			"name": "shack-2048",
 			"type": "virtualbox-iso",
 			"guest_os_type": "Ubuntu_64",
 			"iso_urls": [
@@ -60,9 +60,9 @@
 			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
 			"hard_drive_interface": "sata"
 		},{
-			"name": "ubuntu32",
+			"name": "shack32",
 			"type": "virtualbox-iso",
-			"guest_os_type": "Ubuntu",
+			"guest_os_type": "shack",
 			"iso_urls": [
 				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso",
 				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso"
@@ -88,9 +88,9 @@
 			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
 			"hard_drive_interface": "sata"
 		},{
-			"name": "ubuntu32-2048",
+			"name": "shack32-2048",
 			"type": "virtualbox-iso",
-			"guest_os_type": "Ubuntu",
+			"guest_os_type": "shack",
 			"iso_urls": [
 				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso",
 				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso"
@@ -125,7 +125,7 @@
 			"type": "shell",
 			"execute_command": "echo 'vagrant' | sudo -S -E sh {{.Path}}",
 			"override": {
-				"ubuntu": {
+				"shack": {
 					"scripts": [
 						"script/ubuntu/update.sh",
 						"script/ubuntu/network.sh",
@@ -135,7 +135,7 @@
 						"script/ubuntu/cleanup.sh"
 					]
 				},
-				"ubuntu-2048": {
+				"shack-2048": {
 					"scripts": [
 						"script/ubuntu/update.sh",
 						"script/ubuntu/network.sh",
@@ -145,7 +145,7 @@
 						"script/ubuntu/cleanup.sh"
 					]
 				},
-				"ubuntu32": {
+				"shack32": {
 					"scripts": [
 						"script/ubuntu/update.sh",
 						"script/ubuntu/network.sh",
@@ -155,7 +155,7 @@
 						"script/ubuntu/cleanup.sh"
 					]
 				},
-				"ubuntu32-2048": {
+				"shack32-2048": {
 					"scripts": [
 						"script/ubuntu/update.sh",
 						"script/ubuntu/network.sh",
