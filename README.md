@@ -40,6 +40,11 @@ There are currently 4 possible boxes to install:
 
 
 ## The installation commands
+
+To run the commands you need to be in the **templates** folder.
+
+`cd packer-vagrant-ubuntu-box/templates`
+
 To install **Ubuntu Server 14.10 64bit (512MB)** type
 
 `packer build -only=ubuntu ubuntu.json`
