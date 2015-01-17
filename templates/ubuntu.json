@@ -1,0 +1,177 @@
+{
+	"builders": [
+		{
+			"name": "ubuntu",
+			"type": "virtualbox-iso",
+			"guest_os_type": "Ubuntu_64",
+			"iso_urls": [
+				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-amd64.iso",
+				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-amd64.iso"
+			],
+			"iso_checksum": "91bd1cfba65417bfa04567e4f64b5c55",
+			"iso_checksum_type": "md5",
+			"ssh_username": "vagrant",
+			"ssh_password": "vagrant",
+			"http_directory": "../http/ubuntu/",
+			"headless": true,
+			"boot_wait": "5s",
+			"boot_command": [
+				"<esc><esc><enter><wait>",
+				"/install/vmlinuz ",
+				"preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+				"debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+				"hostname={{.Name}} ",
+				"fb=false debconf/frontend=noninteractive ",
+				"keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+				"keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+				"initrd=/install/initrd.gz -- <enter>"
+			],
+			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
+			"hard_drive_interface": "sata"
+		},{
+			"name": "ubuntu-2048",
+			"type": "virtualbox-iso",
+			"guest_os_type": "Ubuntu_64",
+			"iso_urls": [
+				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-amd64.iso",
+				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-amd64.iso"
+			],
+			"vboxmanage": [
+				["modifyvm", "{{.Name}}", "--memory", "2048"]
+			],
+			"iso_checksum": "91bd1cfba65417bfa04567e4f64b5c55",
+			"iso_checksum_type": "md5",
+			"ssh_username": "vagrant",
+			"ssh_password": "vagrant",
+			"http_directory": "../http/ubuntu/",
+			"headless": true,
+			"boot_wait": "5s",
+			"boot_command": [
+				"<esc><esc><enter><wait>",
+				"/install/vmlinuz ",
+				"preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+				"debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+				"hostname={{.Name}} ",
+				"fb=false debconf/frontend=noninteractive ",
+				"keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+				"keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+				"initrd=/install/initrd.gz -- <enter>"
+			],
+			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
+			"hard_drive_interface": "sata"
+		},{
+			"name": "ubuntu32",
+			"type": "virtualbox-iso",
+			"guest_os_type": "Ubuntu",
+			"iso_urls": [
+				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso",
+				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso"
+			],
+			"iso_checksum": "1c920941d2544c0e097deb79cf3ebfbd",
+			"iso_checksum_type": "md5",
+			"ssh_username": "vagrant",
+			"ssh_password": "vagrant",
+			"http_directory": "../http/ubuntu/",
+			"headless": true,
+			"boot_wait": "5s",
+			"boot_command": [
+				"<esc><esc><enter><wait>",
+				"/install/vmlinuz ",
+				"preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+				"debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+				"hostname={{.Name}} ",
+				"fb=false debconf/frontend=noninteractive ",
+				"keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+				"keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+				"initrd=/install/initrd.gz -- <enter>"
+			],
+			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
+			"hard_drive_interface": "sata"
+		},{
+			"name": "ubuntu32-2048",
+			"type": "virtualbox-iso",
+			"guest_os_type": "Ubuntu",
+			"iso_urls": [
+				"http://releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso",
+				"http://nl.releases.ubuntu.com/14.10/ubuntu-14.10-server-i386.iso"
+			],
+			"vboxmanage": [
+				["modifyvm", "{{.Name}}", "--memory", "2048"]
+			],
+			"iso_checksum": "1c920941d2544c0e097deb79cf3ebfbd",
+			"iso_checksum_type": "md5",
+			"ssh_username": "vagrant",
+			"ssh_password": "vagrant",
+			"http_directory": "../http/ubuntu/",
+			"headless": true,
+			"boot_wait": "5s",
+			"boot_command": [
+				"<esc><esc><enter><wait>",
+				"/install/vmlinuz ",
+				"preseed/url=http://{{.HTTPIP}}:{{.HTTPPort}}/preseed.cfg ",
+				"debian-installer=en_US auto locale=en_US kbd-chooser/method=us ",
+				"hostname={{.Name}} ",
+				"fb=false debconf/frontend=noninteractive ",
+				"keyboard-configuration/modelcode=SKIP keyboard-configuration/layout=USA ",
+				"keyboard-configuration/variant=USA console-setup/ask_detect=false ",
+				"initrd=/install/initrd.gz -- <enter>"
+			],
+			"shutdown_command": "echo 'vagrant' | sudo -S -E shutdown -P now",
+			"hard_drive_interface": "sata"
+		}
+	],
+	"provisioners": [
+		{
+			"type": "shell",
+			"execute_command": "echo 'vagrant' | sudo -S -E sh {{.Path}}",
+			"override": {
+				"ubuntu": {
+					"scripts": [
+						"script/ubuntu/update.sh",
+						"script/ubuntu/network.sh",
+						"script/common/vagrant.sh",
+						"script/common/virtualbox.sh",
+						"script/ubuntu/post-install.sh",
+						"script/ubuntu/cleanup.sh"
+					]
+				},
+				"ubuntu-2048": {
+					"scripts": [
+						"script/ubuntu/update.sh",
+						"script/ubuntu/network.sh",
+						"script/common/vagrant.sh",
+						"script/common/virtualbox.sh",
+						"script/ubuntu/post-install.sh",
+						"script/ubuntu/cleanup.sh"
+					]
+				},
+				"ubuntu32": {
+					"scripts": [
+						"script/ubuntu/update.sh",
+						"script/ubuntu/network.sh",
+						"script/common/vagrant.sh",
+						"script/common/virtualbox.sh",
+						"script/ubuntu/post-install.sh",
+						"script/ubuntu/cleanup.sh"
+					]
+				},
+				"ubuntu32-2048": {
+					"scripts": [
+						"script/ubuntu/update.sh",
+						"script/ubuntu/network.sh",
+						"script/common/vagrant.sh",
+						"script/common/virtualbox.sh",
+						"script/ubuntu/post-install.sh",
+						"script/ubuntu/cleanup.sh"
+					]
+				}
+			}
+		}
+	],
+	"post-processors": [
+		{
+			"type": "vagrant",
+			"output": "../build/{{.BuildName}}.box"
+		}
+	]
+}
