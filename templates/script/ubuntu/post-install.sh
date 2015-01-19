@@ -99,6 +99,7 @@ sudo service mysql restart
 #
 sudo curl -sS https://getcomposer.org/installer | php
 sudo mv composer.phar /usr/local/bin/composer
+sudo chown -R vagrant:vagrant ~/.composer
 
 #
 # Install phalcon
