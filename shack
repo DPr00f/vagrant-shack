@@ -1,311 +1,414 @@
 #!/usr/bin/env python
-import sys, shutil, inspect, os, errno, subprocess, getpass
+import sys, shutil, inspect, os, errno, subprocess, getpass, urllib, re, json
 
-VERSION = '0.0.1'
+# Support Python 3
+if not hasattr(urllib, "urlopen"):
+	import urllib.request
+
+try:
+    unicode = unicode
+except NameError:
+    # 'unicode' is undefined, must be Python 3
+    str = str
+    unicode = str
+    bytes = bytes
+    basestring = (str,bytes)
+else:
+    # 'unicode' exists, must be Python 2
+    str = str
+    unicode = unicode
+    bytes = str
+    basestring = basestring
+
+VERSION = '1.0.0'
 fileToInstall = os.path.realpath(__file__)
 installPath = '/usr/bin/'
 filename = sys.argv[0].replace('./', '')
 userhome = os.getenv("HOME")
 shackDotFilePath = userhome + '/.shack/'
 sshDotFilePath = userhome + '/.ssh/'
-currentDirectory = os.getcwd() + '/'
+currentDirectory = os.path.dirname(os.path.realpath(__file__)) + "/"
 linux = sys.platform.startswith('linux')
 mac = sys.platform.startswith('darwin')
 
-def getArgument():
-	if len(sys.argv) > 1:
-		return sys.argv[1]
-	else:
-		return "help"
+class Cli:
 
-def checkSu():
-	if getpass.getuser() == 'root':
-		print("Executing Shack as root can create a big mess. Cowardly declining.")
-		sys.exit(errno.EACCES)
-
-def getAnswer():
-	try:
-		return raw_input().lower()
-	except:
-		return input().lower()
-
-def createNewShackRuby(boxname):
-	with open(currentDirectory + "install/shack.rb", "wt") as fout:
-		with open(currentDirectory + "install/shackNOBOX.rb", "rt") as fin:
-			for line in fin:
-				fout.write(line.replace('##REPLACEBOXNAME##', boxname))
-
-# DONOTCOPY #
-def installNewBox():
-	print('')
-	print('')
-	print("Online Box or Build one? Type the correct number")
-	print('')
-	print('[1] Online Box')
-	print('[2] Build one')
-	answer = getAnswer()
-	if answer == '2':
-		print('')
-		print('')
-		print("Pick one of the boxes")
-		print('')
-		print('[1] Ubuntu 64bit (512mb)')
-		print('[2] Ubuntu 64bit (2048mb)')
-		print('[3] Ubuntu 32bit (512mb)')
-		print('[4] Ubuntu 32bit (2048mb)')
-		answer = getAnswer()
-		os.chdir(currentDirectory + 'templates')
-		if answer == '1':
-			print('Executing Ubuntu 64bit (512mb)')
-			boxname = 'shack'
-			p = subprocess.Popen(['packer', 'build', '-only=shack', 'ubuntu.json'])
-		elif answer == '2':
-			boxname = 'shack-2048'
-			print('Executing Ubuntu 64bit (2048mb)')
-			p = subprocess.Popen(['packer', 'build', '-only=shack-2048', 'ubuntu.json'])
-		elif answer == '3':
-			boxname = 'shack32'
-			print('Executing Ubuntu 32bit (512mb)')
-			p = subprocess.Popen(['packer', 'build', '-only=shack32', 'ubuntu.json'])
-		elif answer == '4':
-			boxname = 'shack32-2048'
-			print('Executing Ubuntu 32bit (2048mb)')
-			p = subprocess.Popen(['packer', 'build', '-only=shack32-2048', 'ubuntu.json'])
-		else:
-			print('Option was not recognized')
-			sys.exit(errno.EINVAL)
-		p.wait()
-
-		p = subprocess.Popen(['vagrant', 'box', 'add', '--force', boxname, currentDirectory + 'build/' + boxname + '.box'])
-		p.wait()
-	elif answer == '1':
-		print('')
-		print('')
-		print("Pick one of the boxes")
-		print('')
-		print('[1] Ubuntu 64bit (512mb)')
-		print('[2] Ubuntu 32bit (512mb)')
-		answer = getAnswer()
-		if answer == '1':
-			boxname = 'Jocolopes/Phubuntu'
-			p = subprocess.Popen(['vagrant', 'box', 'add', boxname], stdout=subprocess.PIPE)
-		elif answer == '2':
-			boxname = 'Jocolopes/Phubuntu32'
-			p = subprocess.Popen(['vagrant', 'box', 'add', boxname], stdout=subprocess.PIPE)
-		else:
-			print('Option was not recognized')
-			sys.exit(errno.EINVAL)
-		p.wait()
-	createNewShackRuby(boxname)
-# DONOTCOPY #
-
-def getUsername():
-	return os.getlogin()
-
-def checkSSH():
-	if not os.path.exists(sshDotFilePath):
-		print("Couldn't find an ssh key")
-		print("Please create one using `ssh-keygen -t rsa -C \"your_email@example.com\"`")
-		sys.exit(errno.EACCES)
-
-# Variables
-arg = getArgument()
-
-# Colors
-native = '\033[m'
-red = '\033[01;31m'
-blue = '\033[00;35m'
-
-if len(sys.argv) > 2 and sys.argv[2] == 'debug':
-	print(blue + "Install '" + fileToInstall + "'")
-	print("Install onto '" + installPath + "'")
-	print("Install shack user folder at '" + shackDotFilePath + "'" + native)
-
-commands = [
-	'up',
-	'destroy',
-	'halt',
-	# DONOTCOPY #
-	'install',
-	# DONOTCOPY #
-	'suspend',
-	'resume',
-	'status',
-	'update',
-	'ssh',
-	'help',
-	'edit',
-	'--version'
-]
-
-if arg not in commands:
-	print(red + arg + native + ' is not a valid command')
-	print("")
-	arg = 'help'
-
-if arg == '--version':
-	print("Shack v" + VERSION)
-
-if arg == 'help':
-	print("Shack creates a wrapper around vagrant and allows you to run the commands from any path of your system")
-	print("")
-	print("Commands:")
-	print("up\t\tStarts the VM")
-	print("destroy\t\tRemoves the VM")
-	print("halt\t\tShuts the VM down")
-	print("suspend\t\tSuspends the VM")
-	print("resume\t\tResumes the suspended VM")
-	print("status\t\tPrints the satus of the VM")
-	print("update\t\tUpdates de base vagrant box")
-	print("ssh\t\tLog's through SSH to the VM")
-	print("edit\t\tOpens the Shack.yaml to configure the box and sites to run")
-	# DONOTCOPY #
-	print("install\t\tInstall Shack globally (Requires root authorization)")
-	# DONOTCOPY #
-
-if arg == 'up':
-	checkSu()
-	checkSSH()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'up'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'destroy':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'destroy', '--force'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'halt':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'halt'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'suspend':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'suspend'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'resume':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'resume'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'status':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'status'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'update':
-	checkSu()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'box', 'update'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'ssh':
-	checkSu()
-	checkSSH()
-	os.chdir(shackDotFilePath)	
-	p = subprocess.Popen(['vagrant', 'ssh'])
-	p.wait()
-	sys.exit(0)
-
-if arg == 'edit':
-	checkSu()
-	if linux:
-		p = subprocess.Popen(['xdg-open', shackDotFilePath + 'Shack.yaml'])
-	elif mac:
-		p = subprocess.Popen(['open', shackDotFilePath + 'Shack.yaml'])
-	else:
-		p = subprocess.Popen(['start', shackDotFilePath + 'Shack.yaml'])
-	sys.exit(0)
-
-# JUSTEXITHERE #
-if arg == 'install':
-	checkSu()
-	copy = True
-	with open('shackInstalled', "wt") as fout:
-		with open(fileToInstall, "rt") as fin:
-			for line in fin:
-				if line.find('# DONOTCOPY #') != -1:
-					copy = not copy
-				if line.find('# JUSTEXITHERE #') != -1:
-					break
-				if copy and line.find('# DONOTCOPY #') == -1:
-					fout.write(line)
-	p = subprocess.Popen(['sudo', 'mv', 'shackInstalled', installPath + 'shack'])
-	p.wait()
-	p = subprocess.Popen(['sudo', 'chmod' , '+x', installPath + 'shack'])
-	p.wait()
-	process = subprocess.Popen(['vagrant', 'box', 'list'], stdout=subprocess.PIPE)
-	out, err = process.communicate()
-	if out.find(b'vagrant box add') != -1:
-		print("Shack couldn't find a box")
-		print("You want to install one? [Y/n]")
-		answer = getAnswer()
+	def askQuestion(self, question, default = False):
+		append = "[y/n]"
+		if default == "y":
+			append = "[Y/n]"
+		elif default == "n":
+			append = "[y/N]"
+		try:
+			answer = str(raw_input(question + " " + append + " ")).lower()
+		except:
+			answer = str(input(question + " " + append + " ")).lower()
 		if not answer:
-			answer = "y"
-		if answer == 'y' or answer == 'yes':
-			installNewBox()
+			answer = default
+		if answer == "y" or answer == "yes":
+			return True
+		elif answer == "n" or answer == "no":
+			return False
 		else:
-			print("You need a box to keep on going with the installation")
-			print("Add one and retry installing")
-			sys.exit(0)
-	else:
-		print("Shack found boxes")
-		print("Pick from list or install a new one?")
-		print('')
-		print('[1] Pick from list')
-		print('[2] Install new one')
-		answer = getAnswer()
-		if answer == '1':
-			print("Pick the box you want to install")
+			os.system("clear")
+			return self.askQuestion(question, default)
+			
+	def pickOption(self, message, options, default = False):
+		append = ""
+		if default != False:
+			append = " [" + str(default) + "]"
+		print(message + append)
+		print("")
+		for(i, option) in enumerate(options):
+			print("[" + str(i+1) + "] " + option)
+		print("")
+		try:
+			answer = str(input("Select an option: "))
+		except e:
+			answer = str(raw_input("Select an option: "))
+		if default != False and not answer:
+			return default
+		for(i, option) in enumerate(options):
+			if str(i + 1) == answer:
+				return str(option)
+		os.system("clear")
+		return self.pickOption(message, options, default)
+
+	def error(self, message, code = False):
+		if not code:
+			code = errno.EACCES 
+		print('\033[01;31m' + message + '\033[m')
+		sys.exit(code)
+
+	def _getCommands_(self, commands):
+		newCommands = []
+		if isinstance(commands, basestring):
+			newCommands = commands.split(" ")
+		else:
+			for command in commands:
+				comms = command.split(" ")
+				for comm in comms:
+					newCommands.append(comm)
+		return newCommands
+
+	def run(self, commands, folder = False):
+		if folder != False:
+			os.chdir(folder)
+		subprocess.Popen(self._getCommands_(commands))
+
+	def runAndWait(self, commands, folder = False):
+		if folder != False:
+			os.chdir(folder)
+		p = subprocess.Popen(self._getCommands_(commands))
+		p.wait()
+
+	def runAndReturnOutput(self, commands, folder = False):
+		if folder != False:
+			os.chdir(folder)
+		process = subprocess.Popen(self._getCommands_(commands), stdout=subprocess.PIPE)
+		return process.communicate()
+
+
+class Web:
+	def getWebsite(self, url):
+		if hasattr(urllib, "urlopen"):
+			try:
+				request = urllib.urlopen(url)
+				return request.read().decode("utf8")
+			except e:
+				return False
+		else:
+			try:
+				request = urllib.request.urlopen(url)
+				return request.read().decode("utf8")
+			except e:
+				return False
+
+	def getVagrantBoxes(self, source):
+		try:
+			matches = re.findall("<a.*?/boxes/.*?>(.*?)</a.*?<strong>.*?<strong>(.*?)</strong", source, re.DOTALL)
+			return matches
+		except e:
+			return False
+
+
+class File:
+	def open(self, location):
+		try:
+			fil = open(currentDirectory + location, "r")
+			d = fil.read()
+			fil.close()
+			return d
+		except e:
+			return False
+
+	def openJson(self, location):
+		json_data = self.open(location)
+		try:
+			return json.loads(json_data)
+		except e:
+			Cli().error("Failed to open json file '" + currentDirectory + location + "'")
+		
+
+	def parseUrlList(self, source):
+		urls = []
+		lines = source.splitlines()
+		for line in lines:
+			if not line.strip().startswith(";"):
+				urls.append(line)
+		return urls
+
+
+class Vagrant:
+
+	def __init__(self):
+		self.boxes = False
+		self.cli = Cli()
+
+	def getBoxes(self):
+		if not self.boxes:
+			out, err = self.cli.runAndReturnOutput("vagrant box list")
 			boxes = out.decode('utf8').split('\n')
-			i = 1
+			self.boxes = []
+			# Python 3 doesn't like my filters :(
 			for box in boxes:
-				if box:
-					print('[' + str(i) + '] ' + box)
-					i += 1
-			answer = getAnswer()
-			i = 1
-			boxname = None
-			for box in boxes:
-				if box:
-					if str(i) == answer:
-						boxname = box.split(' ')[0]
-						break
-			if not boxname:
-				print(red + 'The specified box doesn\'t exist' + native)
-				sys.exit(errno.EINVAL)
-			createNewShackRuby(boxname)
+				if box.strip() != "":
+					self.boxes.append(box)
+		return self.boxes
 
-		elif answer == '2':
-			installNewBox()
+	def containsBoxes(self):
+		if not self.boxes:
+			self.getBoxes()
+		if self.boxes[0].find('vagrant box add') != -1:
+			return False
+		return True
+
+	def up(self):
+		self.cli.runAndWait("vagrant up", shackDotFilePath)
+
+	def destroy(self):
+		self.cli.runAndWait("vagrant destroy --force", shackDotFilePath)
+
+	def halt(self):
+		self.cli.runAndWait("vagrant halt", shackDotFilePath)
+		
+	def suspend(self):
+		self.cli.runAndWait("vagrant suspend", shackDotFilePath)
+		
+	def resume(self):
+		self.cli.runAndWait("vagrant resume", shackDotFilePath)
+		
+	def status(self):
+		self.cli.runAndWait("vagrant status", shackDotFilePath)
+		
+	def update(self):
+		self.cli.runAndWait("vagrant update", shackDotFilePath)
+
+	def ssh(self):
+		if not os.path.exists(sshDotFilePath):
+			Cli().error("Couldn't find an ssh key\nPlease create one using `ssh-keygen -t rsa -C \"your_email@example.com\"`", errno.EACCES)
+		self.cli.runAndWait("vagrant ssh", shackDotFilePath)
+
+
+class User:
+	def isSu(self):
+		if getpass.getuser() == 'root':
+			cli = Cli()
+			cli.error("Executing Shack as root can create a big mess. Cowardly declining.", errno.EACCES)
+
+
+class Colors:
+	native = '\033[m'
+	red = '\033[01;31m'
+	blue = '\033[00;35m'
+
+
+class App:
+
+	defaultArgument = "help"
+	commands = [
+		'up',
+		'destroy',
+		'halt',
+# DONOTCOPY #
+		'install',
+# DONOTCOPY #
+		'suspend',
+		'resume',
+		'status',
+		'update',
+		'ssh',
+		'help',
+		'edit',
+		'--version'
+	]
+
+	def __init__(self):
+		self.cli = Cli()
+		self.web = Web()
+		self.file = File()
+		self.argument = self.getArgument()
+		self.colors = Colors()
+		self.user = User()
+		self.vagrant = Vagrant()
+		if not self.validArgument():
+			print(self.colors.red + self.argument + self.colors.native + ' is not a valid command')
+			print("")
+			self.argument = self.defaultArgument
+		self.startWithArgument(self.argument)
+
+	def getArgument(self):
+		if len(sys.argv) > 1:
+			return sys.argv[1]
 		else:
-			print(red + 'Option was not recognized' + native)
-			sys.exit(errno.EINVAL)
+			return self.defaultArgument
 
-	if not os.path.exists(shackDotFilePath):
-		os.makedirs(shackDotFilePath + 'scripts')
-	shutil.copy2(currentDirectory + 'install/Shack.yaml', shackDotFilePath + 'Shack.yaml')
-	shutil.copy2(currentDirectory + 'install/Vagrantfile', shackDotFilePath + 'Vagrantfile')
-	shutil.copy2(currentDirectory + 'install/shack.rb', shackDotFilePath + 'shack.rb')
-	shutil.copy2(currentDirectory + 'install/scripts/after.sh', shackDotFilePath + 'scripts/after.sh')
-	shutil.copy2(currentDirectory + 'install/scripts/create-mysql.sh', shackDotFilePath + 'scripts/create-mysql.sh')
-	shutil.copy2(currentDirectory + 'install/scripts/serve.sh', shackDotFilePath + 'scripts/serve.sh')
-	shutil.copy2(currentDirectory + 'install/scripts/aliases', shackDotFilePath + 'scripts/aliases')
-	
-	subprocess.Popen(['rm', currentDirectory + 'install/shack.rb'], stdout=subprocess.PIPE)
-	print("Shack was installed successfully!")
-	print("Type `shack` to see the help")
+	def validArgument(self):
+		if self.argument not in self.commands:
+			return False
+		else:
+			return True
+
+	def startWithArgument(self, arg):
+		if arg == "--version":
+			print("Shack v" + VERSION)
+		elif arg == "help":
+			print("Shack creates a wrapper around vagrant and allows you to run the commands from any path of your system")
+			print("")
+			print("Commands:")
+			print("up\t\tStarts the VM")
+			print("destroy\t\tRemoves the VM")
+			print("halt\t\tShuts the VM down")
+			print("suspend\t\tSuspends the VM")
+			print("resume\t\tResumes the suspended VM")
+			print("status\t\tPrints the satus of the VM")
+			print("update\t\tUpdates de base vagrant box")
+			print("ssh\t\tLog's through SSH to the VM")
+			print("edit\t\tOpens the Shack.yaml to configure the box and sites to run")
+# DONOTCOPY #
+			print("install\t\tInstall Shack globally (Requires root authorization)")
+# DONOTCOPY #
+		else:
+			self.user.isSu()
+			if arg == "up":
+				self.vagrant.up()
+			elif arg == "destroy":
+				self.vagrant.destroy()
+			elif arg == "halt":
+				self.vagrant.halt()
+			elif arg == "suspend":
+				self.vagrant.suspend()
+			elif arg == "resume":
+				self.vagrant.resume()
+			elif arg == "status":
+				self.vagrant.status()
+			elif arg == "update":
+				self.vagrant.update()
+			elif arg == "ssh":
+				self.vagrant.ssh()
+			elif arg == "edit":
+				if linux:
+					self.cli.run(["xdg-open", shackDotFilePath + 'Shack.yaml'])
+				elif mac:
+					self.cli.run(["open", shackDotFilePath + 'Shack.yaml'])
+				else:
+					self.cli.run(["start", shackDotFilePath + 'Shack.yaml'])
+# DONOTCOPY #
+			elif arg == "install":
+				self.install()
+
+	def pickFromOnlineBoxes(self):
+		options = []
+		urls = self.file.parseUrlList(self.file.open("atlas.list"))
+		for url in urls:
+			source = self.web.getWebsite(url)
+			if source != False:
+				boxes = self.web.getVagrantBoxes(source)
+				if boxes and len(boxes):
+					for box in boxes:
+						options.append(box[0] + " (v" + box[1] + ")")
+		if len(options):
+			return self.cli.pickOption("Pick a box from the list", options)
+		else:
+			self.cli.error("There was an error retrieving the boxes", errno.EACCES)
+
+	def copytItself(self):
+		with open('shackInstalled', "wt") as fout:
+			with open(fileToInstall, "rt") as fin:
+				copy = True
+				for line in fin:
+					if line.strip().find('# DONOTCOPY #') == 0:
+						copy = not copy
+					if copy and line.strip().find('# DONOTCOPY #') == -1:
+						fout.write(line)
+
+	def createNewShackRuby(self, boxname):
+		with open(currentDirectory + "install/shack.rb", "wt") as fout:
+			with open(currentDirectory + "install/shackNOBOX.rb", "rt") as fin:
+				for line in fin:
+					fout.write(line.replace('##REPLACEBOXNAME##', boxname))
+
+	def installNewBox(self):
+		if self.cli.pickOption("Online box or build one?", ["Online box", "Build one"]) == "Online box":
+			boxname = self.pickFromOnlineBoxes().split(" ")[0]
+			self.cli.runAndWait(["vagrant box add --force", boxname])
+		else:
+			options = []
+			for (dirpath, dirnames, filenames) in os.walk(currentDirectory + "templates"):
+				for filename in filenames:
+					if filename.endswith(".json"):
+						json_data = self.file.openJson("templates/" + filename)
+						try:
+							for builder in json_data["builders"]:
+								options.append(builder["name"] + ' - ' + filename)
+						except e:
+							continue
+				break
+
+			answer = self.cli.pickOption("Which box you want to build?", options).split(" ")
+			boxname = answer[0]
+			jsonFile = answer[-1]
+			if os.path.isfile(currentDirectory + 'build/' + boxname + '.box'):
+				if self.cli.askQuestion("A box named '" + self.colors.red +  boxname + self.colors.native + "' was found already, do you still want to build?"):
+					self.cli.runAndWait(["packer build", "-only=" + boxname, jsonFile], currentDirectory + "templates")
+			else:
+				self.cli.runAndWait(["packer build", "-only=" + boxname, jsonFile], currentDirectory + "templates")
+			self.cli.runAndWait(["vagrant box add", boxname, currentDirectory + "build/" + boxname + ".box --force"])
+		self.createNewShackRuby(boxname)
+
+	def install(self):
+		os.system("clear")
+		self.copytItself()
+		self.cli.runAndWait(["sudo mv", currentDirectory + "shackInstalled", installPath + "shack"])
+		self.cli.runAndWait(["sudo chmod +x", installPath + 'shack'])
+		if self.vagrant.containsBoxes():
+			print("Shack found boxes")
+			if self.cli.pickOption("Pick from list or install a new one?", ['Pick from list', 'Install new one']) == 'Pick from list':
+				boxes = self.vagrant.getBoxes()
+				boxname = self.cli.pickOption("Pick a box to install", boxes)
+				self.createNewShackRuby(boxname)
+			else:
+				self.installNewBox()
+		else:
+			print("Shack couldn't find any local box")
+			if self.cli.askQuestion("You want to install one?", "y"):
+				self.installNewBox()
+			else:
+				self.cli.error("You need a box to keep on going with the installation\nAdd one and retry installing", 0)
+
+		if not os.path.exists(shackDotFilePath):
+			os.makedirs(shackDotFilePath + 'scripts')
+		shutil.copy2(currentDirectory + 'install/Shack.yaml', shackDotFilePath + 'Shack.yaml')
+		shutil.copy2(currentDirectory + 'install/Vagrantfile', shackDotFilePath + 'Vagrantfile')
+		shutil.copy2(currentDirectory + 'install/shack.rb', shackDotFilePath + 'shack.rb')
+		shutil.copy2(currentDirectory + 'install/scripts/after.sh', shackDotFilePath + 'scripts/after.sh')
+		shutil.copy2(currentDirectory + 'install/scripts/create-mysql.sh', shackDotFilePath + 'scripts/create-mysql.sh')
+		shutil.copy2(currentDirectory + 'install/scripts/serve.sh', shackDotFilePath + 'scripts/serve.sh')
+		shutil.copy2(currentDirectory + 'install/scripts/aliases', shackDotFilePath + 'scripts/aliases')
+		
+		self.cli.runAndReturnOutput(["rm", currentDirectory + 'install/shack.rb'])
+		print("Shack was installed successfully!")
+		print("Type `shack` to see the help")
+# DONOTCOPY #
+
+App()
