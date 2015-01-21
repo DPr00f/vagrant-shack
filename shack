@@ -401,7 +401,7 @@ class App:
 				self.installNewBox()
 			else:
 				self.cli.error("You need a box to keep on going with the installation\nAdd one and retry installing", 0)
-		if not self.file.exists('/etc/init.d/vagrant-boxes') and self.cli.askQuestion("Shack can install a init.d script to stop and start vagrant box on restart. Do you want this?", 'y'):
+		if linux and not self.file.exists('/etc/init.d/vagrant-boxes') and self.cli.askQuestion("Shack can install a init.d script to stop and start vagrant box on restart. Do you want this?", 'y'):
 			self.cli.runAndWait(["sudo cp", currentDirectory + 'install/vagrant-boxes', '/etc/init.d/vagrant-boxes'])
 			self.cli.runAndWait("sudo chmod +x /etc/init.d/vagrant-boxes")
 			self.cli.runAndWait("sudo update-rc.d vagrant-boxes defaults 99 01")
