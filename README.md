@@ -1,72 +1,49 @@
-# packer-vagrant-shack-box
-An automated creation of a vagrantbox with virtualbox
+# Vagrant Shack
+Vagrant Shack allows ubuntu/mac users to create a global shack box and control it without being in the box folder.
 
-# How to use Shack
-make sure `shack` is executable
+## Shack commands
 
-Type `chmod +x shack`
-
-Install by typing `./shack install` and follow instructions
-
-# Contents
-The installation creates a configured box for Phalcon PHP with:
-
-- nginx
-- mariadb-server-10.0 (Global user and available from outside the box user: shack password: secret)
-- PHP 5.6
-- Composer
-- Phalcon
-- Phalcon Dev Tools
-- MemcaheD
-- Redis
-- MongoDB
-- Node
-- Ruby
-
-# Building the box
-The box will run the following scripts:
-
-- script/ubuntu/update.sh
-- script/ubuntu/network.sh
-- script/common/vagrant.sh
-- script/common/virtualbox.sh
-- script/common/motd.sh
-- script/ubuntu/post-install.sh
-- script/ubuntu/cleanup.sh
-
-The **post-install.sh** script contains the installation for all the server goodies
-
-There are currently 4 possible boxes to install:
-
-- Ubuntu Server 14.10 64bit (512MB)
-- Ubuntu Server 14.10 32bit (512MB)
-- Ubuntu Server 14.10 64bit (2048MB)
-- Ubuntu Server 14.10 32bit (2048MB)
-
-**NOTE:** Please take in mind that we can change the box memory size on runtime using vagrant. 512MB is good if you want to serve the box using [atlas.hashicorp.com](http://atlas.hashicorp.com)
+- `--version`		Displays the Shack version
+- `help` 			Displays the list of commands
+- `up`				Starts the VM
+- `destroy`			Removes the VM
+- `halt`			Shuts the VM down
+- `suspend`			Suspends the VM
+- `resume`			Resumes the suspended VM
+- `status`			Prints the satus of the VM
+- `update`			Updates de base vagrant box
+- `ssh`				Log's through SSH to the VM
+- `edit`			Opens the Shack.yaml to configure the box and sites to run
+- `install`			Install Shack globally (Requires root authorization)
 
 
-## The installation commands
+## You can use your own online boxes
 
-To run the commands you need to be in the **templates** folder.
+If you already have a box on atlas.hashicorp.com just add the link to `atlas.list` and run `./shack install`
 
-`cd packer-vagrant-shack-box/templates`
+e.g. https://atlas.hashicorp.com/Jocolopes
 
-To install **Ubuntu Server 14.10 64bit (512MB)** type
 
-`packer build -only=shack ubuntu.json`
+## Building your own vagrant box
 
-To install **Ubuntu Server 14.10 32bit (512MB)** type
+Create your packer json file in the templates folder and run `./shack install`
 
-`packer build -only=shack32 ubuntu.json`
+Take `ubuntu.json` as an example.
 
-To install **Ubuntu Server 14.10 64bit (2048MB)** type
+You can later upload the box saved to `build/<name of the box>.box` to atlas.hashicorp.com. 
 
-`packer build -only=shack-2048 ubuntu.json`
 
-To install **Ubuntu Server 14.10 32bit (2048MB)** type
+**Note:** You need packer to be installed globally
 
-`packer build -only=shack32-2048 ubuntu.json`
+## You don't like the way nginx serves the website
 
-To install **all boxes** type
-`packer build ubuntu.json`
+That's fine... I don't take it personally and you can change it anyway...
+
+This script was built with Phalcon PHP environment in mind, if you need to change anything change the files in `install/scripts/` and run `./shack install`
+
+
+# Many Many Thanks
+
+- Thanks to Taylor Otwell and his amazing Homestead script (I had to borrow some files from his script)
+- Thanks to Olle Gustafsson and the script for start/suspend boxes on Ubuntu
+- Thanks to you for reading this till the end. Hope you enjoy it
