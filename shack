@@ -158,6 +158,12 @@ class File:
 				urls.append(line)
 		return urls
 
+	def exists(self, location):
+		return os.path.isfile(location);
+
+	def copy(self, fromLocation, toLocation):
+		shutil.copy2(fromLocation, toLocation)
+
 
 class Vagrant:
 
@@ -368,7 +374,7 @@ class App:
 			answer = self.cli.pickOption("Which box you want to build?", options).split(" ")
 			boxname = answer[0]
 			jsonFile = answer[-1]
-			if os.path.isfile(currentDirectory + 'build/' + boxname + '.box'):
+			if self.file.exists(currentDirectory + 'build/' + boxname + '.box'):
 				if self.cli.askQuestion("A box named '" + self.colors.red +  boxname + self.colors.native + "' was found already, do you still want to build?"):
 					self.cli.runAndWait(["packer build", "-only=" + boxname, jsonFile], currentDirectory + "templates")
 			else:
@@ -395,16 +401,22 @@ class App:
 				self.installNewBox()
 			else:
 				self.cli.error("You need a box to keep on going with the installation\nAdd one and retry installing", 0)
-
+		if not self.file.exists('/etc/init.d/vagrant-boxes') and self.cli.askQuestion("Shack can install a init.d script to stop and start vagrant box on restart. Do you want this?", 'y'):
+			self.cli.runAndWait(["sudo cp", currentDirectory + 'install/vagrant-boxes', '/etc/init.d/vagrant-boxes'])
+			self.cli.runAndWait("sudo chmod +x /etc/init.d/vagrant-boxes")
+			self.cli.runAndWait("sudo update-rc.d vagrant-boxes defaults 99 01")
 		if not os.path.exists(shackDotFilePath):
 			os.makedirs(shackDotFilePath + 'scripts')
-		shutil.copy2(currentDirectory + 'install/Shack.yaml', shackDotFilePath + 'Shack.yaml')
-		shutil.copy2(currentDirectory + 'install/Vagrantfile', shackDotFilePath + 'Vagrantfile')
-		shutil.copy2(currentDirectory + 'install/shack.rb', shackDotFilePath + 'shack.rb')
-		shutil.copy2(currentDirectory + 'install/scripts/after.sh', shackDotFilePath + 'scripts/after.sh')
-		shutil.copy2(currentDirectory + 'install/scripts/create-mysql.sh', shackDotFilePath + 'scripts/create-mysql.sh')
-		shutil.copy2(currentDirectory + 'install/scripts/serve.sh', shackDotFilePath + 'scripts/serve.sh')
-		shutil.copy2(currentDirectory + 'install/scripts/aliases', shackDotFilePath + 'scripts/aliases')
+		if self.file.exists(shackDotFilePath + 'Shack.yaml') and not self.cli.askQuestion("There's already a Shack.yaml file in the destiny. Keep it?", "y"):
+			self.file.copy(currentDirectory + 'install/Shack.yaml', shackDotFilePath + 'Shack.yaml')
+
+		for filename in os.listdir(currentDirectory + "install"):
+			if not os.path.isdir(currentDirectory + "install/" + filename) and filename != "Shack.yaml" and filename != "vagrant-boxes" and filename != "shackNOBOX.rb":
+				self.file.copy(currentDirectory + 'install/' + filename, shackDotFilePath + filename)
+
+		for filename in os.listdir(currentDirectory + "install/scripts"):
+			if not os.path.isdir(currentDirectory + "install/scripts/" + filename):
+				self.file.copy(currentDirectory + 'install/scripts/' + filename, shackDotFilePath + 'scripts/' + filename)
 		
 		self.cli.runAndReturnOutput(["rm", currentDirectory + 'install/shack.rb'])
 		print("Shack was installed successfully!")
