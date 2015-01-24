@@ -1,3 +1,7 @@
+# Dependencies
+
+- vagrant (v1.7.2 or up)
+
 # Vagrant Shack
 Vagrant Shack allows ubuntu/mac users to create a global shack box and control it without being in the box folder.
 
@@ -32,8 +36,6 @@ Take `ubuntu.json` as an example.
 
 You can later upload the box saved to `build/<name of the box>.box` to atlas.hashicorp.com. 
 
-
-**Note:** You need packer to be installed globally
 
 ## You don't like the way nginx serves the website
 
