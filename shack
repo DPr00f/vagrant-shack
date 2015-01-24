@@ -22,7 +22,7 @@ else:
     bytes = str
     basestring = basestring
 
-VERSION = '1.0.0'
+VERSION = '1.0.1'
 fileToInstall = os.path.realpath(__file__)
 installPath = '/usr/bin/'
 filename = sys.argv[0].replace('./', '')
