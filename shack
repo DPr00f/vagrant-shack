@@ -34,11 +34,7 @@ mac = sys.platform.startswith('darwin')
 class Cli:
 
 	def __init__(self):
-		signal.signal(signal.SIGINT, self.signal_handler)
-
-	# Catch CTRL+C event and close App
-	def signal_handler(self, signal, frame):
-		self.exitApp()
+		signal.signal(signal.SIGINT, self.exitApp)
 
 	def pickBoxOrInstall(self):
 		menu = {}
@@ -59,15 +55,15 @@ class Cli:
 
 	def selectOption(self, menu, message = "\n"):
 		options=menu.keys()
-		options.sort()
+		options = sorted(options)
 		selected = 0;
 		
 		while selected not in options:
 			self.printMenuTitle(message, True)
 			for entry in options:
-				print "[" + entry + "] " + menu[entry]
+				print("[" + entry + "] " + menu[entry])
 			print("\n")
-			selected = raw_input("Select an option: ").upper()
+			selected = str(input("Select an option: ")).upper()
 
 		return selected
 
@@ -146,7 +142,7 @@ class Cli:
 		process = subprocess.Popen(self._getCommands_(commands), stdout=subprocess.PIPE)
 		return process.communicate()
 
-	def exitApp(self):
+	def exitApp(self, signal=False, frame=False):
 		print("\nThanks for using Shack.")
 		sys.exit(0)
 
