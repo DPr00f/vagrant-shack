@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 import sys, signal, shutil, inspect, os, errno, subprocess, getpass, urllib, re, json
 
+python3 = False
 # Support Python 3
 if not hasattr(urllib, "urlopen"):
 	import urllib.request
+	python3 = True
 
 try:
     unicode = unicode
@@ -51,7 +53,13 @@ class Cli:
 	def printMenuTitle(self, message, clear=False):
 		if clear == True:
 			os.system("clear")
-		print(message);
+		print(message)
+
+	def input(self, message):
+		if python3:
+			return str(input(message))
+
+		return str(raw_input(message))
 
 	def selectOption(self, menu, message = "\n"):
 		options=menu.keys()
@@ -63,7 +71,7 @@ class Cli:
 			for entry in options:
 				print("[" + entry + "] " + menu[entry])
 			print("\n")
-			selected = str(input("Select an option: ")).upper()
+			selected = self.input("Select an option: ").upper()
 
 		return selected
 
@@ -73,7 +81,7 @@ class Cli:
 			append = "[Y/n]"
 		elif default == "n":
 			append = "[y/N]"
-		answer = str(input(question + " " + append + " ")).lower()
+		answer =self.input(question + " " + append + " ").lower()
 		if not answer:
 			answer = default
 		if answer == "y" or answer == "yes":
@@ -93,7 +101,7 @@ class Cli:
 		for(i, option) in enumerate(options):
 			print("[" + str(i+1) + "] " + option)
 		print("")
-		answer = str(input("Select an option: "))
+		answer = self.input("Select an option: ")
 		if default != False and not answer:
 			return default
 		for(i, option) in enumerate(options):
