@@ -40,6 +40,37 @@ class Cli:
 	def signal_handler(self, signal, frame):
 		self.exitApp()
 
+	def pickBoxOrInstall(self):
+		menu = {}
+		menu["1"]="Pick from list" 
+		menu["2"]="Install new one"
+		menu["Q"]="Quit"
+		options = menu.keys()
+
+		selected = self.selectOption(menu, "Shack found boxes\nPick from list or install a new one?\n")
+		if selected == "Q":
+			self.exitApp()
+		return menu[selected]
+	
+	def printMenuTitle(self, message, clear=False):
+		if clear == True:
+			os.system("clear")
+		print(message);
+
+	def selectOption(self, menu, message = "\n"):
+		options=menu.keys()
+		options.sort()
+		selected = 0;
+		
+		while selected not in options:
+			self.printMenuTitle(message, True)
+			for entry in options:
+				print "[" + entry + "] " + menu[entry]
+			print("\n")
+			selected = raw_input("Select an option: ").upper()
+
+		return selected
+
 	def askQuestion(self, question, default = False):
 		append = "[y/n]"
 		if default == "y":
@@ -176,7 +207,6 @@ class File:
 
 
 class Vagrant:
-
 	def __init__(self):
 		self.boxes = False
 		self.cli = Cli()
@@ -399,7 +429,7 @@ class App:
 		self.cli.runAndWait(["sudo chmod +x", installPath + 'shack'])
 		if self.vagrant.containsBoxes():
 			print("Shack found boxes")
-			if self.cli.pickOption("Pick from list or install a new one?", ['Pick from list', 'Install new one']) == 'Pick from list':
+			if self.cli.pickBoxOrInstall() == "Pick from list":
 				boxes = self.vagrant.getBoxes()
 				boxname = self.cli.pickOption("Pick a box to install", boxes)
 				self.createNewShackRuby(boxname)
@@ -427,7 +457,7 @@ class App:
 		for filename in os.listdir(currentDirectory + "install/scripts"):
 			if not os.path.isdir(currentDirectory + "install/scripts/" + filename):
 				self.file.copy(currentDirectory + 'install/scripts/' + filename, shackDotFilePath + 'scripts/' + filename)
-		
+
 		self.cli.runAndReturnOutput(["rm", currentDirectory + 'install/shack.rb'])
 		print("Shack was installed successfully!")
 		print("Type `shack` to see the help")
