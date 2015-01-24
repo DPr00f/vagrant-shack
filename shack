@@ -71,7 +71,7 @@ class Cli:
 		print("")
 		try:
 			answer = str(input("Select an option: "))
-		except e:
+		except ValueError:
 			answer = str(raw_input("Select an option: "))
 		if default != False and not answer:
 			return default
