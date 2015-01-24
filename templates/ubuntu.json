@@ -2,6 +2,7 @@
 	"builders": [
 		{
 			"name": "shack",
+			"meaningful_name": "Ubuntu 64bit (512MB)",
 			"type": "virtualbox-iso",
 			"guest_os_type": "Ubuntu_64",
 			"iso_urls": [
@@ -30,6 +31,7 @@
 			"hard_drive_interface": "sata"
 		},{
 			"name": "shack-2048",
+			"meaningful_name": "Ubuntu 64bit (2048MB)",
 			"type": "virtualbox-iso",
 			"guest_os_type": "Ubuntu_64",
 			"iso_urls": [
@@ -61,6 +63,7 @@
 			"hard_drive_interface": "sata"
 		},{
 			"name": "shack32",
+			"meaningful_name": "Ubuntu 32bit (512MB)",
 			"type": "virtualbox-iso",
 			"guest_os_type": "shack",
 			"iso_urls": [
@@ -89,6 +92,7 @@
 			"hard_drive_interface": "sata"
 		},{
 			"name": "shack32-2048",
+			"meaningful_name": "Ubuntu 32bit (2048MB)",
 			"type": "virtualbox-iso",
 			"guest_os_type": "shack",
 			"iso_urls": [
