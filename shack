@@ -73,10 +73,7 @@ class Cli:
 			append = "[Y/n]"
 		elif default == "n":
 			append = "[y/N]"
-		try:
-			answer = str(raw_input(question + " " + append + " ")).lower()
-		except:
-			answer = str(input(question + " " + append + " ")).lower()
+		answer = str(input(question + " " + append + " ")).lower()
 		if not answer:
 			answer = default
 		if answer == "y" or answer == "yes":
@@ -96,10 +93,7 @@ class Cli:
 		for(i, option) in enumerate(options):
 			print("[" + str(i+1) + "] " + option)
 		print("")
-		try:
-			answer = str(input("Select an option: "))
-		except ValueError:
-			answer = str(raw_input("Select an option: "))
+		answer = str(input("Select an option: "))
 		if default != False and not answer:
 			return default
 		for(i, option) in enumerate(options):
