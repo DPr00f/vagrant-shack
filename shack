@@ -165,7 +165,7 @@ class Web:
 				if useUrllib2:
 					request = urllib2.urlopen(url)
 				else:
-					request = urllib2.urlopen(url)
+					request = urllib.urlopen(url)
 				return request.read().decode("utf8")
 			except e:
 				return False
