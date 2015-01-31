@@ -186,13 +186,10 @@ class Web:
 
 class File:
 	def open(self, location):
-		try:
-			fil = open(currentDirectory + location, "r")
-			d = fil.read()
-			fil.close()
-			return d
-		except e:
-			return False
+		fil = open(currentDirectory + location, "r")
+		d = fil.read()
+		fil.close()
+		return d
 
 	def openJson(self, location):
 		json_data = self.open(location)
@@ -405,38 +402,55 @@ class App:
 				for line in fin:
 					fout.write(line.replace('##REPLACEBOXNAME##', boxname))
 
+	def getBoxesFromJson(self):
+		options = []
+		for (dirpath, dirnames, filenames) in os.walk(currentDirectory + "templates"):
+			for filename in filenames:
+				if filename.endswith(".json"):
+					json_data = self.file.openJson("templates/" + filename)
+					try:
+						for builder in json_data["builders"]:
+							if builder.get("meaningful_name"):
+								buildName = builder["name"] + ' - ' + builder['meaningful_name'] + ' - ' + filename
+							elif builder.get("name"):
+								buildName = builder["name"] + ' - ' + filename
+							else:
+								buildName = "unknown"
+							if buildName != "unknown":
+								options.append(buildName)
+					except e:
+						continue
+			break
+		return options
+
+	def buildJsonFromFile(self, filename):
+		json_data = self.file.openJson("templates/" + filename)
+		i = 0
+		while i < len(json_data["builders"]):
+			if json_data["builders"][i].get("meaningful_name"):
+				del json_data["builders"][i]["meaningful_name"]
+			i += 1
+		with open(currentDirectory + 'templates/_generated', 'w') as outfile:
+			json.dump(json_data, outfile)
+
+	def buildBox(self, boxname, jsonFile):
+		if self.file.exists(currentDirectory + 'build/' + boxname + '.box'):
+			if False == self.cli.askQuestion("A box named '" + self.colors.red +  boxname + self.colors.native + "' was found already, do you still want to build?"):
+				return
+		self.buildJsonFromFile(jsonFile)
+		self.cli.runAndWait(["packer build", "-only=" + boxname, '_generated'], currentDirectory + "templates")
+
 	def installNewBox(self):
 		if self.cli.pickOption("Online box or build one?", ["Online box", "Build one"]) == "Online box":
 			boxname = self.pickFromOnlineBoxes().split(" ")[0]
 			self.cli.runAndWait(["vagrant box add --force", boxname])
 		else:
-			options = []
-			for (dirpath, dirnames, filenames) in os.walk(currentDirectory + "templates"):
-				for filename in filenames:
-					if filename.endswith(".json"):
-						json_data = self.file.openJson("templates/" + filename)
-						try:
-							for builder in json_data["builders"]:
-								if builder.get("meaningful_name"):
-									buildName = builder["name"] + ' - ' + builder['meaningful_name'] + ' - ' + filename
-								elif builder.get("name"):
-									buildName = builder["name"] + ' - ' + filename
-								else:
-									buildName = "unknown"
-								if buildName != "unknown":
-									options.append(buildName)
-						except e:
-							continue
-				break
+			options = self.getBoxesFromJson()
 
 			answer = self.cli.pickOption("Which box you want to build?", options).split(" ")
 			boxname = answer[0]
 			jsonFile = answer[-1]
-			if self.file.exists(currentDirectory + 'build/' + boxname + '.box'):
-				if self.cli.askQuestion("A box named '" + self.colors.red +  boxname + self.colors.native + "' was found already, do you still want to build?"):
-					self.cli.runAndWait(["./bin/packer build", "-only=" + boxname, jsonFile], currentDirectory + "templates")
-			else:
-				self.cli.runAndWait(["./bin/packer build", "-only=" + boxname, jsonFile], currentDirectory + "templates")
+			self.buildBox(boxname, jsonFile)
 			self.cli.runAndWait(["vagrant box add", boxname, currentDirectory + "build/" + boxname + ".box --force"])
 		self.createNewShackRuby(boxname)
 

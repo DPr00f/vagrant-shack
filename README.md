@@ -2,6 +2,7 @@
 
 - vagrant (v1.7.2 or up)
 - Python (2 or 3)
+- Packer (v0.7.5 or up)
 
 # Vagrant Shack
 Vagrant Shack allows ubuntu/mac users to create a global shack box and control it without being in the box folder.
