@@ -34,7 +34,7 @@ else:
 
 VERSION = '1.0.1'
 fileToInstall = os.path.realpath(__file__)
-installPath = '/usr/bin/'
+installPath = '/usr/local/bin/'
 filename = sys.argv[0].replace('./', '')
 userhome = os.getenv("HOME")
 shackDotFilePath = userhome + '/.shack/'
@@ -50,7 +50,7 @@ class Cli:
 
 	def pickBoxOrInstall(self):
 		menu = {}
-		menu["1"]="Pick from list" 
+		menu["1"]="Pick from list"
 		menu["2"]="Install new one"
 		menu["Q"]="Quit"
 		options = menu.keys()
@@ -59,7 +59,7 @@ class Cli:
 		if selected == "Q":
 			self.exitApp()
 		return menu[selected]
-	
+
 	def printMenuTitle(self, message, clear=False):
 		if clear == True:
 			os.system("clear")
@@ -75,7 +75,7 @@ class Cli:
 		options=menu.keys()
 		options = sorted(options)
 		selected = 0;
-		
+
 		while selected not in options:
 			self.printMenuTitle(message, True)
 			for entry in options:
@@ -101,7 +101,7 @@ class Cli:
 		else:
 			os.system("clear")
 			return self.askQuestion(question, default)
-			
+
 	def pickOption(self, message, options, default = False):
 		append = ""
 		if default != False:
@@ -122,7 +122,7 @@ class Cli:
 
 	def error(self, message, code = False):
 		if not code:
-			code = errno.EACCES 
+			code = errno.EACCES
 		print('\033[01;31m' + message + '\033[m')
 		sys.exit(code)
 
@@ -178,7 +178,7 @@ class Web:
 
 	def getVagrantBoxes(self, source):
 		try:
-			matches = re.findall("<a.*?/boxes/.*?>(.*?)</a.*?<strong>.*?<strong>(.*?)</strong", source, re.DOTALL)
+			matches = re.findall("<a.*?/boxes/.*?>(.*?)</a.*?</div>.*?<p.*?version.*?>(.*?)<b>", source, re.DOTALL)
 			return matches
 		except e:
 			return False
@@ -197,7 +197,7 @@ class File:
 			return json.loads(json_data)
 		except e:
 			Cli().error("Failed to open json file '" + currentDirectory + location + "'")
-		
+
 
 	def parseUrlList(self, source):
 		urls = []
@@ -245,16 +245,16 @@ class Vagrant:
 
 	def halt(self):
 		self.cli.runAndWait("vagrant halt", shackDotFilePath)
-		
+
 	def suspend(self):
 		self.cli.runAndWait("vagrant suspend", shackDotFilePath)
-		
+
 	def resume(self):
 		self.cli.runAndWait("vagrant resume", shackDotFilePath)
-		
+
 	def status(self):
 		self.cli.runAndWait("vagrant status", shackDotFilePath)
-		
+
 	def update(self):
 		self.cli.runAndWait("vagrant update", shackDotFilePath)
 
@@ -380,7 +380,7 @@ class App:
 				boxes = self.web.getVagrantBoxes(source)
 				if boxes and len(boxes):
 					for box in boxes:
-						options.append(box[0] + " (v" + box[1] + ")")
+						options.append(box[0] + " (" + box[1].strip() + ")")
 		if len(options):
 			return self.cli.pickOption("Pick a box from the list", options)
 		else:
